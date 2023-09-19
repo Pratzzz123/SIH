@@ -1,0 +1,5 @@
+{% autoescape off %}
+
+someone just logged into your {% if username %}{{username}}{% endif %} smart urja account. confirm it's you:
+confirmation link: http://{{domain}}{% url 'activate' uidb64=uid token=token %}
+{% endautoescape %}

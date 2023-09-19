@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+    font-family: Poppins, sans-serif;
+}
+
+body::-webkit-scrollbar {
+    display: none;
+}
+
+.overlay {
+    position: relative; 
+}
+
+/* 1024 -1 so it doesnt show when it hits 1024px */
+@media only screen and (max-width: 1023px) {
+    .overlay:after {
+        content: " ";
+        z-index: 29;
+        display: block;
+        height: 100%;
+        top: 80px;
+        left: 0;
+        right: 0;
+        background: rgba(0, 0, 0, 0.5);
+        pointer-events: none;
+        position: fixed;
+    }
+}
+    </style>
+</head>
+<body>
+    
+
+    <template>
+        <div class="leading-normal tracking-normal" id="main-body">
+          <div class="flex flex-wrap">
+      
+            <Sidebar />
+      
+            <div class="w-full bg-gray-100 pl-0 lg:pl-64 min-h-screen" :class="sideBarOpen ? 'overlay' : ''" id="main-content">
+      
+              <Navbar />
+      
+              <div class="p-6 bg-gray-100 mb-20">
+                <router-view />
+              </div>
+      
+              <Footer />
+      
+            </div>
+          </div>
+        </div>
+      </template>
+      
+  
+
+<template>
+    <div class="w-full border-t-2 px-8 py-6 lg:flex justify-between items-center">
+        <p class="mb-2 lg:mb-0">© Copyright 2020</p>
+
+        <div class="flex">
+            <a href="#" class="mr-6 hover:text-gray-900">Terms of Service</a>
+            <a href="#" class="mr-6 hover:text-gray-900">Privacy Policy</a>
+            <a href="#" class="hover:text-gray-900">About Us</a>
+        </div>
+    </div>
+</template>
+<script>
+    import { mapState } from 'vuex'
+    
+    import Sidebar from './Sidebar'
+    import Navbar from './Navbar'
+    import Footer from './Footer'
+    
+    export default {
+      name: 'Dashboard',
+      computed: {
+        ...mapState(['sideBarOpen'])
+      },
+      components: {
+        Sidebar,
+        Navbar,
+        Footer
+      }
+      
+    }
+    </script>
+
+</body>
+</html>
