@@ -8,41 +8,45 @@ from django.contrib import messages
 from django.core.mail import EmailMessage, send_mail
 from django.contrib.sites.shortcuts import get_current_site
 from django.template.loader import render_to_string
-from django.utils.http import urlsafe_base64_encode
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
 from .tokens import generate_token
+from django.shortcuts import get_object_or_404
+from django.contrib.auth import get_user_model
+from django.http import  HttpResponse
+from .utils import getIP
+from .models import SmartUrja
 # Create your views here.
+
 def main(request):
     return render(request, 'main.html')
 
 def submit(request):
     if request.method == "POST":
+        
         username = request.POST.get('username')
         pwd = request.POST.get('password')
         email = request.POST.get('email')
-        # password = encrypt(pwd)
-        # myuser = User.objects.create_user(username, pwd)
-
-        # user = SmartUrja(username = username, password = pwd)
-        # user.save()
+        user = authenticate(username = username, password = pwd)
+        # myuser = SmartUrja(username = username, password = pwd, email = email)
         # myuser.save()
-        user = authenticate(username = username, password = pwd, email = email)
-
-
-        # messages.success(request, "You are succesfuly logged in")
         if not User.objects.filter(email=email).exists():
              return render(request, 'main.html', {'error': "Wrong credentials"})
             # return redirect('main')
         if not username.isalnum():
-            messages.error(request, 'main')
+             return render(request, 'main.html', {'error': "username should be alphanumeric"})
+        if user.is_active is None:
+            return render(request, 'main.html', {'error': "Verify e-mail"})
         if user is not None:
-            user.is_active = False
-            current_site = get_current_site(request)
+            
             login(request, user)
+            user.is_active = False
+            user.save()
+            currentIP = getIP()
             subject = "recent login detected"
             message2 = render_to_string('email_confirmation.html', {
                 'name': user.username, 
-                'domain': current_site.domain, 
+                'domain': (get_current_site(request)).domain, 
                 'uid': urlsafe_base64_encode(force_bytes(user.pk)),
                 'token': generate_token.make_token(user)
                 })
@@ -68,13 +72,16 @@ def signout(request):
 def activate(request, uidb64, token):
     try:
         uid = force_str(urlsafe_base64_encode(uidb64))
-        user = User.objects.get(pk = uid)
+        user = User.objects.get(User, pk=uid)
     except(TypeError, ValueError, OverflowError, User.DoesNotExist):
         user = None
         
-    if user is not None  and generate_token.check_token(user, token):
+    if user is not None and generate_token.check_token(user, token):
         user.is_active = True
+        user.save()
         login(request, user)
         return redirect('submit', {'username': user.username, 'confirmed': "confirmed"})
     else:
         return render(request, 'fail.html')
+    
+# print(getIP())
